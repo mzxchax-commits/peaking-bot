@@ -24,13 +24,12 @@ Railway detecta `package.json` y ejecuta automáticamente el script `start`.
 
 1. En Railway configura `DISCORD_TOKEN`, `CLIENT_ID=1543237858989576263` y
    `GUILD_ID=1543227776742727702`.
-2. En Discord Developer Portal activa **Server Members Intent**.
-3. Asegúrate de que Peaking tiene estos permisos en el servidor:
+2. Asegúrate de que Peaking tiene estos permisos en el servidor:
    **Manage Roles**, **Manage Channels**, **Manage Messages**, **View Channels**,
    **Send Messages**, **Embed Links** y **Read Message History**.
-4. Mueve el rol de Peaking por encima de los roles que administrará.
-5. Cuando Railway muestre `Peaking conectado`, ejecuta `/peakpass-setup`.
-6. Abre `🛂・peak-pass` y pulsa **INICIALIZAR PEAK PASS**.
+3. Mueve el rol de Peaking por encima de los roles que administrará.
+4. Cuando Railway muestre `Peaking conectado`, ejecuta `/peakpass-setup`.
+5. Abre `🛂・peak-pass` y pulsa **INICIALIZAR PEAK PASS**.
 
 El comando puede ejecutarse varias veces: actualiza el panel existente y no
 publica mensajes duplicados. El recorrido es privado, usa un reto aleatorio,
@@ -39,9 +38,5 @@ atrás de 60 segundos.
 
 ## Intents de Discord
 
-En Discord Developer Portal, abre **Bot** y activa los intents privilegiados
-que usa el bot:
-
-- Server Members Intent
-
-`Message Content Intent` no es necesario para Peak Pass.
+Peak Pass solo utiliza el intent estándar `Guilds`. No necesita activar
+`Server Members Intent` ni `Message Content Intent` en Discord Developer Portal.
