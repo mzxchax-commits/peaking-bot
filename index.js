@@ -7,6 +7,7 @@ import {
   handlePeakPassButton,
   handlePeakPassSetup,
   peakPassSetupCommand,
+  syncPeakPassPanel,
 } from "./src/peak-pass.js";
 
 const token = process.env.DISCORD_TOKEN;
@@ -32,6 +33,8 @@ client.once(Events.ClientReady, async (readyClient) => {
       const guild = await readyClient.guilds.fetch(guildId);
       await guild.commands.set(commands);
       console.log(`⚡ Comando /peakpass-setup registrado en ${guild.name}.`);
+      const panel = await syncPeakPassPanel(guild);
+      console.log(`🎨 Panel Peak Pass ${panel.created ? "publicado" : "actualizado"} automáticamente.`);
     } else {
       await readyClient.application.commands.set(commands);
       console.log("🌍 Comando /peakpass-setup registrado globalmente.");

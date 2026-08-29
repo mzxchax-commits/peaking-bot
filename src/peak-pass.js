@@ -14,6 +14,7 @@ const BRAND = 0x8b5cf6;
 const SUCCESS = 0x23a55a;
 const WARNING = 0xf0b232;
 const PANEL_BUTTON_ID = "ppa:start";
+const SECURITY_BUTTON_ID = "ppa:security";
 const SESSION_LIFETIME_MS = 10 * 60 * 1000;
 const FAILURE_COOLDOWN_MS = 60 * 1000;
 const ACCESS_DELAY_SECONDS = 60;
@@ -94,21 +95,68 @@ function baseEmbed(title, description, color = BRAND) {
     .setTimestamp();
 }
 
-function panelEmbed() {
+function panelEmbeds(botUser) {
+  const avatar = botUser?.displayAvatarURL({ size: 256 });
+  const hero = new EmbedBuilder()
+    .setColor(BRAND)
+    .setAuthor({ name: "PEAKING  •  OFFICIAL ACCESS SYSTEM", ...(avatar ? { iconURL: avatar } : {}) })
+    .setTitle("🛂  PEAK PASS ACCESS")
+    .setDescription([
+      "> **Tu identidad. Tu ruta. Tu acceso.**",
+      "",
+      "Peak Pass es tu credencial personal dentro de **Peak Open Club**. Protege tu entrada, construye tu perfil de jugador y evoluciona junto a tu trayectoria.",
+      "",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    ].join("\n"))
+    .addFields(
+      { name: "IDENTIDAD", value: "`PPA ÚNICO`", inline: true },
+      { name: "ACCESO", value: "`CLUB UNLOCK`", inline: true },
+      { name: "SISTEMA", value: "🟢 **ONLINE**", inline: true },
+    )
+    .setFooter({ text: "SECURE  •  PRIVATE  •  EVOLUTIVE" });
+  if (avatar) hero.setThumbnail(avatar);
+
+  const protocol = new EmbedBuilder()
+    .setColor(0x5865f2)
+    .setTitle("ENTRY PROTOCOL  //  01—03")
+    .setDescription("Un recorrido privado diseñado para completarse sin salir de este mensaje.")
+    .addFields(
+      {
+        name: "01  ┃  IDENTITY CORE",
+        value: "Vincula tu cuenta, protege la sesión y genera tu identificador Peak.",
+      },
+      {
+        name: "02  ┃  BUILD YOUR ROUTE",
+        value: "Define tu estilo de juego y la función que tomas dentro de la partida.",
+      },
+      {
+        name: "03  ┃  CLUB UNLOCK",
+        value: "Recibe el estado **Reciente** y desbloquea automáticamente Peak Open Club.",
+      },
+      {
+        name: "🛡️  PRIVACY SHIELD",
+        value: "No solicitamos datos externos ni mostramos tu ID interno de Discord.",
+      },
+    )
+    .setFooter({ text: "Tiempo estimado: 2 minutos  •  Una sesión  •  Un solo mensaje" });
+
+  return [hero, protocol];
+}
+
+function securityEmbed() {
   return baseEmbed(
-    "Bienvenido a Peak Pass Access",
+    "🛡️  PEAK PASS SECURITY",
     [
-      "Tu identidad inteligente dentro de **Peak Open Club**.",
+      "Tu recorrido se ejecuta de forma privada y solo tú puedes ver sus respuestas.",
       "",
-      "Completa un control de integridad, sincroniza tu señal y construye tu perfil de jugador. Todo ocurre en una única sesión privada.",
-      "",
-      "**Duración aproximada:** 2 minutos",
-      "**Privacidad:** nunca mostramos tu ID interno de Discord",
+      "**Protecciones activas**",
+      "`01` Reto Live Pulse aleatorio",
+      "`02` Sesión temporal anti-repetición",
+      "`03` Bloqueo tras tres señales incorrectas",
+      "`04` Identificador PPA que no expone tu ID de Discord",
+      "`05` Asignación segura de roles al finalizar",
     ].join("\n"),
-  ).addFields(
-    { name: "IDENTIDAD", value: "PPA único y evolutivo", inline: true },
-    { name: "ACCESO", value: "Canales desbloqueados automáticamente", inline: true },
-    { name: "ESTADO INICIAL", value: "Reciente", inline: true },
+    SUCCESS,
   );
 }
 
@@ -321,7 +369,10 @@ async function ensurePeakPassChannel(guild) {
 
 async function upsertPanel(channel) {
   const components = [
-    row(button("INICIALIZAR PEAK PASS", PANEL_BUTTON_ID, ButtonStyle.Primary, "🛂")),
+    row(
+      button("ACTIVAR MI PEAK PASS", PANEL_BUTTON_ID, ButtonStyle.Primary, "🛂"),
+      button("SEGURIDAD", SECURITY_BUTTON_ID, ButtonStyle.Secondary, "🛡️"),
+    ),
   ];
   const recentMessages = await channel.messages.fetch({ limit: 50 });
   const existing = recentMessages.find(
@@ -329,13 +380,21 @@ async function upsertPanel(channel) {
   );
 
   if (existing) {
-    await existing.edit({ embeds: [panelEmbed()], components });
+    await existing.edit({ content: null, embeds: panelEmbeds(channel.client.user), components });
     return { message: existing, created: false };
   }
 
-  const message = await channel.send({ embeds: [panelEmbed()], components });
+  const message = await channel.send({ embeds: panelEmbeds(channel.client.user), components });
   await message.pin().catch(() => null);
   return { message, created: true };
+}
+
+export async function syncPeakPassPanel(guild) {
+  await guild.roles.fetch();
+  await guild.channels.fetch();
+  await ensureRoles(guild);
+  const channel = await ensurePeakPassChannel(guild);
+  return upsertPanel(channel);
 }
 
 export async function handlePeakPassSetup(interaction) {
@@ -363,17 +422,15 @@ export async function handlePeakPassSetup(interaction) {
     return;
   }
 
-  await interaction.guild.roles.fetch();
-  await interaction.guild.channels.fetch();
-  const roles = await ensureRoles(interaction.guild);
-  const channel = await ensurePeakPassChannel(interaction.guild);
-  const panel = await upsertPanel(channel);
+  const panel = await syncPeakPassPanel(interaction.guild);
+  const roles = Object.values(ROLE_NAMES.styles).length + Object.values(ROLE_NAMES.gameRoles).length + 2;
+  const channel = panel.message.channel;
 
   await interaction.editReply({
     content: [
       "✅ **Peak Pass Access está listo.**",
       `Canal: ${channel}`,
-      `Roles sincronizados: **${roles.length}**`,
+      `Roles sincronizados: **${roles}**`,
       panel.created ? "Panel publicado y fijado." : "Panel existente actualizado sin duplicarlo.",
       "Ya puedes pulsar **INICIALIZAR PEAK PASS** para probar el recorrido.",
     ].join("\n"),
@@ -495,6 +552,10 @@ async function runCountdown(interaction, member, session) {
 
 export async function handlePeakPassButton(interaction) {
   if (!interaction.inGuild()) return;
+  if (interaction.customId === SECURITY_BUTTON_ID) {
+    await interaction.reply({ embeds: [securityEmbed()], flags: MessageFlags.Ephemeral });
+    return;
+  }
   if (interaction.customId === PANEL_BUTTON_ID) {
     await startSession(interaction);
     return;
