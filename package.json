@@ -1,0 +1,19 @@
+{
+  "name": "peaking-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bot oficial de Peak Open Club",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "check": "node --check index.js && node --check src/peak-pass.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "discord.js": "^14.22.1"
+  }
+}
